@@ -1,0 +1,19 @@
+body {
+  background: radial-gradient(circle at center, #4e00ff, #000033);
+  min-height: 100vh; 
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#chart-container {
+  position: relative;
+  text-align: center;
+}
+
+#chart {
+  display: block;
+  margin: 0 auto;
+}
+
