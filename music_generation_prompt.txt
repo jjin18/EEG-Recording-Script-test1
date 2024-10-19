@@ -1,0 +1,43 @@
+Compose a 5-second electronic orchestra music clip using a subset of the provided instruments. 
+Your composition should integrate an audible melody, countermelody, and bassline, all following a recognizable chord progression. The music must incorporate variations in dynamics and demonstrate adherence to basic music theory principles. If a sequence of previously generated music is supplied, ensure musical continuity.
+### Steps
+1. **Chord Progression**: Based on the user prompt, generate a suitable chord progression. Use more major chords for a happy theme and more minor chords for a sad theme, while adhering to basic music theory rules.
+2. **Compose Parts Simultaneously**:
+   - **Bassline**: 
+     - Lowest pitch, steady rhythm, sets harmonic groundwork.
+     - Follows the chord progression.
+   - **Melody**:
+     - Main theme, highest pitch, most audible.
+     - Significant rhythmic variation, should follow the chord progression but DO NOT mirror the bassline.
+   - **Countermelody**:
+     - Sits between the melody and bassline in pitch.
+     - Complements the melody and shares inspiration, follows the bassline's chord progression.
+   -**Drums**
+     - Accompanies the previous three parts and helps set the tempo
+     - Matches the mood of the piece - for example, louder drums with more cymbals for something exciting, or slower and softer for something somber
+3. **Layering**: Ensure all three parts begin simultaneously and play concurrently for a duration of 5 seconds. Each part can have multiple notes, and not all parts have to play at every point in time.
+### Output Format
+Output your composition as JUST a list of [instrument, delay, duration, note, volume].
+
+- **Instrument**: Any from the provided list, e.g., `piano`, `pluck`, etc. without the colon.
+- **Delay**: Delay between current note and previous note in seconds.
+- **Duration**: Length of note played in seconds.
+- **Note**: Specify note, e.g., `C4`, `F6`, `Fs4`, `Bb2`. Sharp notes use the symbol s instead of the symbol #, and flat notes use the symbol b.
+- **Volume**: Float between 0 and 0.5.
+
+The total sum of all `delay` commands should approximate 5 seconds. Use `delay: 0` to play notes concurrently.
+### Provided Instruments
+- :dull_bell, :pretty_bell, :beep, :sine, :saw, :pulse, :subpulse, :square, :tri, :dsaw, :dpulse, :dtri, :fm, :mod_fm, :mod_saw, :mod_dsaw, :mod_sine, :mod_beep, :mod_tri, :mod_pulse, :tb303, :supersaw, :hoover, :prophet, :zawa, :dark_ambience, :growl, :hollow, :mono_player, :stereo_player, :blade, :piano, :pluck, :sound_in, :noise, :pnoise, :bnoise, :gnoise, :cnoise, :basic_mono_player, :basic_stereo_player, :basic_mixer, :main_mixer
+### Examples
+- Example output:
+
+[['piano', 0, 0.6, 'C4', 0.45], ['pluck', 0, 0.4, 'E4', 0.3], ['tri', 0, 0.5, 'G3', 0.25], ['piano', 0, 0.7, 'F4', 0.4], ['pluck', 0, 0.3, 'A4', 0.35], ['tri', 0, 0.4, 'C4', 0.2], ['piano', 0.5, 0.7, 'F4', 0.4], ['pluck', 0.5, 0.3, 'A4', 0.35], ['piano', 1, 0.6, 'C4', 0.45], ['pluck', 1, 0.4, 'E4', 0.3], ['tri', 1, 0.5, 'G3', 0.25]]
+
+(Total sleep should equal about 5 seconds.) 
+### Notes
+- Ensure musical harmony and coherence while creatively engaging with the user's prompt.
+- Validate that all chords, rhythms, and dynamics adhere to the intended mood and message of the music piece.
+- Ensure that all parts start at the same time and play simultaneously.
+- Ensure that transitions are not abrupt in tempo and timbre - if you decide to change musical instruments, do it gradually and in a way that the timbre change is fluid.
+
+Your response should only be an array, with no words else outside of the array, and no markdown at all. It should be parseable by ast.literal.eval() without causing any errors.
