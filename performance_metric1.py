@@ -1,24 +1,31 @@
 from cortex import Cortex
 import time
-import numpy as np
-from scipy.signal import butter, lfilter
 
-class LiveEEGMetrics():
+class LivePerformanceMetrics():
     """
-    A class to show EEG metrics (alpha, beta bands) in real-time from the headset.
+    A class to show performance metrics (eng, exc, str, etc.) in real-time from the headset.
     """
 
     def __init__(self, app_client_id, app_client_secret, **kwargs):
-        """Initialize the Cortex connection and bind to EEG data."""
+        """Initialize the Cortex connection and bind to performance metrics data."""
         self.c = Cortex(app_client_id, app_client_secret, debug_mode=True, **kwargs)
         self.c.bind(create_session_done=self.on_create_session_done)
         self.c.bind(query_profile_done=self.on_query_profile_done)
         self.c.bind(load_unload_profile_done=self.on_load_unload_profile_done)
-        self.c.bind(new_eeg_data=self.on_new_eeg_data)  # Bind to EEG data stream
+        self.c.bind(new_met_data=self.on_new_met_data)  # Bind to performance metrics stream
         self.c.bind(inform_error=self.on_inform_error)
 
     def start(self, profile_name, headsetId=''):
-        """Start the live EEG streaming process."""
+        """
+        Start the live performance metrics streaming process.
+
+        Parameters
+        ----------
+        profile_name : string, required
+            name of the profile
+        headsetId: string, optional
+            ID of the headset you want to work with. If empty, the first available headset will be used
+        """
         if profile_name == '':
             raise ValueError('Profile name cannot be empty.')
 
@@ -31,9 +38,17 @@ class LiveEEGMetrics():
         self.c.open()
 
     def subscribe_data(self, streams):
-        """Subscribe to one or more data streams, in this case 'eeg' for EEG data."""
+        """
+        Subscribe to one or more data streams, in this case, 'met' for performance metrics.
+
+        Parameters
+        ----------
+        streams : list, required
+            List of streams to subscribe to, for example ['met'] for performance metrics.
+        """
         self.c.sub_request(streams)
 
+    # Callbacks
     def on_create_session_done(self, *args, **kwargs):
         print('Session created successfully.')
         self.c.query_profile()
@@ -51,57 +66,36 @@ class LiveEEGMetrics():
         is_loaded = kwargs.get('isLoaded')
         if is_loaded:
             print(f"Profile '{self.profile_name}' loaded successfully.")
-            streams = ['eeg']  # Stream 'eeg' data for brainwave activity
+            streams = ['met']  # Only stream 'met' (performance metrics) data
             self.subscribe_data(streams)
         else:
             print(f"Failed to load profile '{self.profile_name}'.")
 
-    def butter_bandpass(self, lowcut, highcut, fs, order=5):
-        """Create a bandpass filter for extracting specific frequency bands."""
-        nyquist = 0.5 * fs
-        low = lowcut / nyquist
-        high = highcut / nyquist
-        b, a = butter(order, [low, high], btype='band')
-        return b, a
+    def on_new_met_data(self, *args, **kwargs):
+        """
+        Handle real-time performance metrics data emitted from Cortex.
 
-    def bandpass_filter(self, data, lowcut, highcut, fs, order=5):
-        """Apply a bandpass filter to the EEG data."""
-        b, a = self.butter_bandpass(lowcut, highcut, fs, order=order)
-        y = lfilter(b, a, data)
-        return y
-
-    def on_new_eeg_data(self, *args, **kwargs):
-        """Handle real-time EEG data and extract alpha/beta band activity."""
+        Parameters
+        ----------
+        kwargs : dict
+            Contains the performance metrics data
+        """
         data = kwargs.get('data')
-        if data and 'eeg' in data:
-            eeg_signals = np.array(data['eeg'])
+        if data and 'met' in data:
+            metrics = data['met']
+            print(f"\nPerformance Metrics at {time.strftime('%H:%M:%S')}")
 
-            # Assuming data is sampled at 128 Hz
-            fs = 128  
-
-            # Alpha band (8-13 Hz)
-            alpha_band = self.bandpass_filter(eeg_signals, 8.0, 13.0, fs)
-
-            # Beta band (13-30 Hz)
-            beta_band = self.bandpass_filter(eeg_signals, 13.0, 30.0, fs)
-
-            # Output the values (you can send this to the front end for visualization)
-            print(f"Alpha Band Power: {np.mean(alpha_band**2)}")
-            print(f"Beta Band Power: {np.mean(beta_band**2)}")
-
-            # You can format this data for visualization
-            self.send_data_to_frontend(alpha_band, beta_band)
-
-    def send_data_to_frontend(self, alpha_band, beta_band):
-        """Send alpha and beta band data to your front-end collaborator."""
-        # This function can be used to format the data in JSON or another format
-        # and send it to the front-end for visualization
-        data = {
-            'alpha_band': alpha_band.tolist(),
-            'beta_band': beta_band.tolist(),
-        }
-        # You can implement this method to send data via sockets or an API, etc.
-        print("Sending data to front-end...")
+            # Output the values for different metrics
+            try:
+                print(f"Engagement: {metrics[1]}")
+                print(f"Excitement: {metrics[3]}")
+                print(f"Long-term Excitement (lex): {metrics[5]}")
+                print(f"Stress: {metrics[7]}")
+                print(f"Relaxation: {metrics[9]}")
+                print(f"Interest: {metrics[11]}")
+                print(f"Focus: {metrics[13]}\n")
+            except IndexError:
+                print("Insufficient metrics data received.")
 
     def on_inform_error(self, *args, **kwargs):
         """Handle errors emitted from Cortex."""
@@ -110,13 +104,16 @@ class LiveEEGMetrics():
         error_message = error_data['message']
         print(f"Error {error_code}: {error_message}")
 
-def run_live_eeg_metrics():
-    """Run the live streaming of EEG data ('eeg') and extract alpha/beta bands."""
+
+def run_live_performance_metrics():
+    """
+    Run the live streaming of performance metrics data ('met') and output it in real-time.
+    """
     your_app_client_id = 'HsepSPbDYvV4j6AYANyR2fUysroiV2O5Mm2ACGil'
     your_app_client_secret = '9ZzzlgiPnI04hvYl0eYYl485lhpCKj6qQ6vNJnOc4WPN3ZH55WbFPAyoGYDXeqz2iOa0D2x1UJmquGpz29bHaB2yrnMIXhLhCCd9UbGB8XwVL0g85gLCjfPiYyamPcMe'
 
-    # Initialize live streaming for EEG data
-    live_metrics = LiveEEGMetrics(your_app_client_id, your_app_client_secret)
+    # Initialize live streaming for performance metrics
+    live_metrics = LivePerformanceMetrics(your_app_client_id, your_app_client_secret)
 
     # Set the profile name of a trained profile
     trained_profile_name = 'trainingtest1'
@@ -125,12 +122,11 @@ def run_live_eeg_metrics():
     try:
         # Keep streaming data until interrupted
         while True:
-            time.sleep(1)
+            time.sleep(1)  # Sleep to avoid busy waiting
 
     except KeyboardInterrupt:
-        print("Stopping the live EEG metrics stream.")
+        print("Stopping the live performance metrics stream.")
         live_metrics.c.close()  # Gracefully close the Cortex connection
 
 if __name__ == '__main__':
-    run_live_eeg_metrics()
-
+    run_live_performance_metrics()
