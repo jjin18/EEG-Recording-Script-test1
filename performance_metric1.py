@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import os
 
 
-openai.api_key = "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"
+openai.api_key = ""
 
 # Read the text file
 with open('music_generation_prompt.txt', 'r') as file:
@@ -172,9 +172,8 @@ def run_live_performance_metrics():
 
                 # Once you get the notes, you can send it to Sonic Pi to generate music
                 # Format: List of [instrument, delay, duration, note, volume] e.g. ['piano', 0.1, 1, 'C', 1]
-                # notes = ast.literal_eval(response.choices[0].message.content)
+                notes = ast.literal_eval(response.choices[0].message.content)
                 
-                notes = [['piano', 0.1, 1, 'C', 1], ['pluck', 0.1, 1, 'D', 1], ['piano', 0.1, 1, 'E', 1], ['pluck', 0.1, 1, 'F', 1], ['piano', 0.1, 1, 'G', 1], ['pluck', 0.1, 1, 'A', 1], ['piano', 0.1, 1, 'B', 1], ['pluck', 0.1, 1, 'C', 1]]
                 
                 # Flatten the array by adding "START" marker to denote sub-arrays
                 flattened_data = []
@@ -183,7 +182,7 @@ def run_live_performance_metrics():
                     flattened_data.extend(sub_array)  # Add the sub-array elements
 
                 print(flattened_data)
-                # flattened_data = ['START', 'piano', 0, 0.5, 'C4', 0.4, 'START', 'pluck', 0, 0.4, 'E5', 0.35, 'START', 'saw', 0, 0.6, 'C3', 0.3, 'START', 'fm', 0.5, 0.5, 'G4', 0.4, 'START', 'pluck', 0.5, 0.3, 'B5', 0.35, 'START', 'saw', 0.5, 0.4, 'G3', 0.3, 'START', 'piano', 0.5, 0.4, 'A4', 0.4, 'START', 'pluck', 0.5, 0.3, 'C6', 0.35, 'START', 'saw', 0.5, 0.4, 'A3', 0.3, 'START', 'fm', 0.5, 0.5, 'F4', 0.4, 'START', 'pluck', 0.5, 0.3, 'A5', 0.35, 'START', 'saw', 0.5, 0.5, 'F3', 0.3, 'START', 'dark_ambience', 0, 0.5, 'C3', 0.2, 'START', 'dark_ambience', 1, 0.5, 'G2', 0.2, 'START', 'dark_ambience', 1, 0.5, 'A2', 0.2, 'START', 'dark_ambience', 1, 0.5, 'F2', 0.2, 'START', 'noise', 1, 0.3, 'C2', 0.3]
+                
                 
                 # Send EEG value as an OSC message
                 client.send_message("/synth", flattened_data)

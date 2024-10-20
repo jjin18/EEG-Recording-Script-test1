@@ -15,7 +15,7 @@ Your composition should integrate an audible melody, countermelody, and bassline
    -**Drums**
      - Accompanies the previous three parts and helps set the tempo
      - Matches the mood of the piece - for example, louder drums with more cymbals for something exciting, or slower and softer for something somber
-3. **Layering**: Ensure all three parts begin simultaneously and play concurrently for a duration of 5 seconds. Each part can have multiple notes, and not all parts have to play at every point in time.
+3. **Layering**: Ensure all three parts begin simultaneously and play concurrently for a duration of 5 seconds. Each part can have multiple notes, and not all parts have to play at every point in time. Make sure there are at least 5 notes per second.
 ### Output Format
 Output your composition as JUST a list of [instrument, delay, duration, note, volume].
 
