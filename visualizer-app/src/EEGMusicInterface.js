@@ -1,192 +1,102 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const EEGMusicInterface = () => {
   const canvasRef = useRef(null);
-  const [brainwaveData, setBrainwaveData] = useState({
-    alpha: 0,
-    beta: 0,
-    gamma: 0
-  });
-  const [stress, setStress] = useState(50);
-  const [focus, setFocus] = useState(50);
 
-  // Simulate brainwave data generation
-  const simulateBrainwaveData = () => {
-    setBrainwaveData({
-      alpha: Math.random() * 100,
-      beta: Math.random() * 100,
-      gamma: Math.random() * 100
-    });
-  };
+  // Placeholder values for excitement and relaxation
+  let excitement = 70; // Example value
+  let relaxation = 50; // Example value
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    const drawVisualizer = () => {
-      const WIDTH = canvas.width;
-      const HEIGHT = canvas.height;
-      const centerX = WIDTH / 2;
-      const centerY = HEIGHT / 2;
-      const barCount = 60;
-      const maxRadius = Math.min(WIDTH, HEIGHT) / 3;
-
-      ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-      const audioData = Array.from({ length: barCount }, () => Math.random() * 100);
-
-      audioData.forEach((value, i) => {
-        const angle = (i / barCount) * Math.PI * 2;
-        const barHeight = value * 1.5;
-        const barWidth = 8;
-
-        const x = centerX + Math.cos(angle) * maxRadius;
-        const y = centerY + Math.sin(angle) * maxRadius;
-        const endX = centerX + Math.cos(angle) * (maxRadius + barHeight);
-        const endY = centerY + Math.sin(angle) * (maxRadius + barHeight);
-
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = `hsla(${i * 6}, 100%, 50%, 0.7)`;
-        ctx.lineWidth = barWidth;
-        ctx.stroke();
-      });
-
-      animationFrameId = requestAnimationFrame(drawVisualizer);
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     };
 
-    drawVisualizer();
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let audioData = new Uint8Array(128).fill(0);
+    let waveData = { alpha: 50, beta: 30 };
+    let offset = 0;
+
+    const drawWave = (y, amplitude, color, waveOffset) => {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+
+      for (let i = 0; i < canvas.width; i++) {
+        ctx.lineTo(i, y + Math.sin((i + waveOffset) * 0.02) * amplitude);
+      }
+      ctx.stroke();
+    };
+
+    const drawVisualizer = () => {
+      const barWidth = (canvas.width / audioData.length) * 4; // Increase bar width
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+
+      for (let i = 0; i < audioData.length; i++) {
+        const barHeight = (audioData[i] / 255) * canvas.height * 0.4; // Adjusted height for bigger bars
+        ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+      }
+    };
+
+    const animate = () => {
+      // Create a fading tail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Tail color with slight transparency
+      ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the entire canvas for the tail effect
+
+      // Draw the alpha and beta waves
+      drawWave(canvas.height / 2, waveData.alpha, 'rgba(0, 255, 255, 0.8)', offset);
+      drawWave(canvas.height / 2 + 50, waveData.beta, 'rgba(255, 0, 0, 0.8)', -offset);
+
+      drawVisualizer();
+
+      // Increase the speed of scrolling by increasing the offset
+      offset += 0.2; // Adjust this value for faster movement
+
+      // Simulate changing audio data
+      for (let i = 0; i < audioData.length; i++) {
+        audioData[i] = Math.random() * 255;
+      }
+
+      // Simulate changing wave data
+      waveData.alpha = 50 + Math.sin(offset * 0.1) * 20; // Adjust waveData as needed
+      waveData.beta = 30 + Math.cos(offset * 0.1) * 15;  // Adjust waveData as needed
+
+      // Draw the alpha and beta values in the top left corner
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.8)'; // Corresponding color for alpha
+      ctx.font = '20px Arial';
+      ctx.fillText(`Alpha: ${waveData.alpha.toFixed(2)}`, 10, 30);
+
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.8)'; // Corresponding color for beta
+      ctx.fillText(`Beta: ${waveData.beta.toFixed(2)}`, 10, 60);
+
+      // Draw excitement and relaxation values in the top right corner
+      ctx.fillStyle = 'rgba(255, 255, 0, 0.8)'; // Example color for excitement
+      ctx.fillText(`Excitement: ${excitement}`, canvas.width - 150, 30);
+
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.8)'; // Example color for relaxation
+      ctx.fillText(`Relaxation: ${relaxation}`, canvas.width - 150, 60);
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
 
     return () => {
+      window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(simulateBrainwaveData, 1000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.backgroundGradient}></div>
-      <div style={styles.canvasContainer}>
-        <canvas ref={canvasRef} style={styles.canvas} />
-        <div style={styles.brainwaveChart}>
-          <svg style={styles.waves} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20">
-            <path
-              d="M0,10 Q5,15 10,10 T 20,10 T 30,10 T 40,10 T 50,10 T 60,10 T 70,10 T 80,10 T 90,10 T 100,10"
-              stroke="blue"
-              strokeWidth="0.5"
-              fill="transparent"
-              style={{ transform: `scaleY(${brainwaveData.alpha / 100})` }}
-            />
-            <path
-              d="M0,12 Q5,17 10,12 T 20,12 T 30,12 T 40,12 T 50,12 T 60,12 T 70,12 T 80,12 T 90,12 T 100,12"
-              stroke="green"
-              strokeWidth="0.5"
-              fill="transparent"
-              style={{ transform: `scaleY(${brainwaveData.beta / 100})` }}
-            />
-            <path
-              d="M0,14 Q5,19 10,14 T 20,14 T 30,14 T 40,14 T 50,14 T 60,14 T 70,14 T 80,14 T 90,14 T 100,14"
-              stroke="red"
-              strokeWidth="0.5"
-              fill="transparent"
-              style={{ transform: `scaleY(${brainwaveData.gamma / 100})` }}
-            />
-          </svg>
-          <div style={styles.dataDisplay}>
-            <h4>Alpha: {brainwaveData.alpha.toFixed(2)}</h4>
-            <h4>Beta: {brainwaveData.beta.toFixed(2)}</h4>
-            <h4>Gamma: {brainwaveData.gamma.toFixed(2)}</h4>
-          </div>
-        </div>
-      </div>
-      <div style={styles.progressBars}>
-        <div style={styles.progressBarContainer}>
-          <label style={styles.label}>Stress Level</label>
-          <div style={styles.progressBar}>
-            <div style={{ ...styles.progress, width: `${stress}%`, backgroundColor: 'red' }}></div>
-          </div>
-        </div>
-        <div style={styles.progressBarContainer}>
-          <label style={styles.label}>Focus Level</label>
-          <div style={styles.progressBar}>
-            <div style={{ ...styles.progress, width: `${focus}%`, backgroundColor: 'green' }}></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    backgroundColor: '#1e1b4b',
-    color: 'white',
-    padding: '16px',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(to bottom right, #1e1b4b, #312e81, #3730a3)',
-    opacity: 0.5,
-  },
-  canvasContainer: {
-    flexGrow: 1,
-    position: 'relative',
-  },
-  canvas: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-  },
-  brainwaveChart: {
-    position: 'relative',
-    zIndex: 10,
-  },
-  waves: {
-    width: '100%',
-    height: '100%',
-  },
-  dataDisplay: {
-    position: 'absolute',
-    bottom: 20,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    color: 'white',
-  },
-  progressBars: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '16px',
-  },
-  progressBarContainer: {
-    width: '48%',
-  },
-  label: {
-    marginBottom: '4px',
-  },
-  progressBar: {
-    backgroundColor: 'gray',
-    borderRadius: '9999px',
-    height: '16px',
-    overflow: 'hidden',
-  },
-  progress: {
-    height: '100%',
-    borderRadius: '9999px',
-  },
+  return <canvas ref={canvasRef} style={{ display: 'block' }} />;
 };
 
 export default EEGMusicInterface;
+
