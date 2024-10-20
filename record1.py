@@ -156,7 +156,7 @@ def main():
         os.makedirs(r.record_export_folder)
 
     # Start recording process (adjust duration if needed)
-    record_duration_s = 10  # 10 seconds recording
+    record_duration_s = 20  # 20 seconds recording
     r.start(record_duration_s)
 
 if __name__ == '__main__':
