@@ -1,0 +1,24 @@
+/* Body styles with no background */
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: none; /* No background */
+}
+
+/* Container for the canvas */
+#chart-container {
+  position: relative;
+  text-align: center;
+}
+
+/* Styles for the canvas */
+#chart {
+  display: block;
+  margin: 0 auto;
+  background: none; /* No background for the canvas */
+  border: 0; /* No border */
+}
+
