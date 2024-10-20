@@ -1,2 +1,6 @@
 data
 *.csv
+bin/
+lib/
+*.cfg
+.env
