@@ -7,6 +7,7 @@ import openai
 import ast
 from dotenv import load_dotenv
 import os
+import re
 
 
 openai.api_key = ""
@@ -144,51 +145,76 @@ def run_live_performance_metrics():
         #     time.sleep(1)  # Sleep to avoid busy waiting
         
 
-        time_elapsed = 0;
-        eeg_interval = 0.5
-        regenerate_time = 2  # Regenerate music every 2 seconds
+        eeg_interval = 0.2  # Interval in seconds to send EEG data
+        time_elapsed = 0
+        time_between_generations = 3  # Time in seconds between each music generation
 
         eeg_data = []
-        notes = []
+        result = []
 
         # Simulate sending live EEG data
         while True:
 
-            # Get EEG data from the headset (for now, get an array of random [excitement, relaxation, stress, focus] values)
-            eeg_data.append([random.randint(0, 100) for _ in range(4)])
+            # Get EEG focus data from the headset
+            # eeg_data.append([random.randint(1, 100)])
 
-            # If you're at regenerate_time seconds, request from Gemini
-                # Send a list of a bunch of chronological snapshops of EEG data 
-                # Send previous the list of notes
-            if (time_elapsed == regenerate_time):
+            average_focus = random.randint(1, 100)
+            print("AVERAGE FOCUS:" + str(average_focus))
+
+            if time_elapsed >= time_between_generations:
+                time_elapsed = 0
 
                 response = openai.chat.completions.create(
                     messages=[{
-                        "role": "user",
+                        "role": "system",
                         "content": prompt,
+                    },
+                    {
+                        "role": "user",
+                        "content": "Generate music that, on a scale of 1 (very very slow and sad) to 100 (extremely fast, happy, and exciting, with lots of notes), has a value of" + str(average_focus) + "/100. For higher values of focus, use triplets, 16th notes, sextuplets, and 32nd notes, in increasing order. For lower values of focus, use half notes, whole notes, and dotted half notes, in decreasing order. Use a variety of instruments and dynamics to create a piece that is engaging and exciting.",
                     }],
                     model="gpt-4o",
                 )
 
                 # Once you get the notes, you can send it to Sonic Pi to generate music
-                # Format: List of [instrument, delay, duration, note, volume] e.g. ['piano', 0.1, 1, 'C', 1]
-                notes = ast.literal_eval(response.choices[0].message.content)
+                # Format: List of [type, instrument, note, duration, volution]
+                lines = (response.choices[0].message.content).split('\n')
+
+                synth_pattern = re.compile(r"synth :(\w+), note: :(\w+), release: ([\d.]+), amp: ([\d.]+)")
+                sleep_pattern = re.compile(r"sleep ([\d.]+)")
                 
+                for line in lines:
+                    print(line)
+                    # Remove comments
+                    line = line.split('#')[0].strip()
+                    
+                    # Match 'synth' line
+                    match = synth_pattern.match(line)
+                    if match:
+                        instrument, note, release, amp = match.groups()
+                        result.append(['synth', instrument, note, float(release), float(amp)])
+                        continue
+                    
+                    # Match 'sleep' line
+                    match = sleep_pattern.match(line)
+                    if match:
+                        duration = float(match.group(1))
+                        result.append(['sleep', '', '', duration, ''])
+                print(result)
                 
                 # Flatten the array by adding "START" marker to denote sub-arrays
                 flattened_data = []
-                for sub_array in notes:
+                for sub_array in result:
                     flattened_data.append("START")  # Marker for start of each sub-array
                     flattened_data.extend(sub_array)  # Add the sub-array elements
 
                 print(flattened_data)
                 
-                
                 # Send EEG value as an OSC message
                 client.send_message("/synth", flattened_data)
 
-                time_elapsed = 0
                 eeg_data = []
+                result = []
             
             # Send data at intervals (adjust as needed)
             time.sleep(eeg_interval)  # Adjust the sleep time for your needs
